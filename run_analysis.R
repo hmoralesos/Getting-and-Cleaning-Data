@@ -53,12 +53,12 @@ activity <- as.factor(mergeData$V0)
 levels(activity) <- activitylabels$V2
 
 
-# 4. Appropriately labels the data set with descriptive variable names.
+# 4.-Appropriately labels the data set with descriptive variable names.
 data<-cbind(activity,mergeData)
 datalabels<-data.table(data)
 
 
-# 5. Creates a second, independent tidy data set with the average of each variable 
+# 5.-Creates a second, independent tidy data set with the average of each variable 
 #    for each activity and each subject.
 
 

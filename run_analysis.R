@@ -65,9 +65,11 @@ levels(mergeData$activity) <- activity_labels$V2
 ################################################################################
 # 4:Appropriately labels the data set with descriptive variable names.         #
 ################################################################################
+
 #Replace "-" for "."
 colnames(mergeData)<-gsub("-",".",colnames(mergeData))
 mergeData
+
 ################################################################################
 # 5:Creates a second, independent tidy data set with the average of each varia-#
 #   ble for each activity and each subject.                                    #

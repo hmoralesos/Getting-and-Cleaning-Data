@@ -1,84 +1,81 @@
-# 1.-Merges the training and the test sets to create one data set.
+################################################################################
+# Libraries                                                                    #
+################################################################################
+library(data.table)
+library(dplyr)
+library(plyr)
 
-## Choose file train
+################################################################################
+# 1:Merges the training and the test sets to create one data set.              #
+################################################################################
+
+# Choose file train
 setwd("~/Desktop/UCI HAR Dataset/train")
 list.files()
-## Read test set
-train<-read.table("X_train.txt")
-labelstrain<-read.table("y_train.txt")
-library(data.table);train<-data.table(train);labelstrain<-data.table(labelstrain)
-names(labelstrain)<-"V0"
-trainl<-cbind(labelstrain,train)
-## Choose file test
+# Read test set
+x_train<-read.table("X_train.txt");y_train<-read.table("y_train.txt")
+subject_train<-read.table("subject_train.txt")
+train<-cbind(subject_train, y_train, x_train)
+train<-tbl_df(train)
+train
+# Choose file test
 setwd("~/Desktop/UCI HAR Dataset/test")
 list.files()
-## Read train set
-test<-read.table("X_test.txt")
-test<-data.table(test)
-labelstest<-read.table("y_test.txt")
-labelstest<-data.table(labelstest)
-names(labelstest)<-"V0"
-testl<-cbind(labelstest,test)
-## print the names attribute of the train and test
-names(trainl)
-names(testl)
-## Merge test and train
-mergeData<-rbind(testl,trainl)
-str(mergeData)
-dim(mergeData)
+# Read train set
+x_test<-read.table("X_test.txt");y_test<-read.table("y_test.txt")
+subject_test<-read.table("subject_test.txt")
+test<-cbind(subject_test, y_test, x_test)
+test<-tbl_df(test)
+test
+# Merge test and train data
+mergeData<-rbind(train,test)
+mergeData
 
+################################################################################
+# 2:Extracts only the measurements on the mean and standard deviation for each #
+#   measurement.                                                               #
+################################################################################
 
-# 2.-Extracts only the measurements on the mean and standard deviation for each 
-# measurement.
-
-
-## Read file features 
+# Read file features 
 setwd("~/Desktop/UCI HAR Dataset")
 list.files()
 features<-read.table("features.txt")
-## Extracts only the measurements on the mean and standard deviation for each 
-## measurement.
-(m<-features[grep("(mean|std)", features[,2]),])
+features<-as.matrix(features$V2)
+# Rename columns
+colnames(mergeData) <- c("subject","activity",features)
+# Extracts only the measurements on the mean and standard deviation for each 
+# measurement.
+mergeData<-mergeData[,grep("subject|activity|mean\\(\\)|std\\(\\)",
+                           colnames(mergeData))]
 
+################################################################################
+# 3:Uses descriptive activity names to name the activities in the data set     #
+################################################################################
 
-#3.-Uses descriptive activity names to name the activities in the data set
-
-
-## Choose file train
+# Choose file
 setwd("~/Desktop/UCI HAR Dataset")
 list.files()
-activitylabels<-read.table("activity_labels.txt")
-activity <- as.factor(mergeData$V0)
-## Transform  activity names to name the activities
-levels(activity) <- activitylabels$V2
+# Read activity labels
+activity_labels<-read.table("activity_labels.txt")
+# Transform  activity names to name the activities
+mergeData$activity<-as.factor(mergeData$activity)
+levels(mergeData$activity) <- activity_labels$V2
 
 
-# 4.-Appropriately labels the data set with descriptive variable names.
-data<-cbind(activity,mergeData)
-datalabels<-data.table(data)
+################################################################################
+# 4:Appropriately labels the data set with descriptive variable names.         #
+################################################################################
+#Replace "-" for "."
+colnames(mergeData)<-gsub("-",".",colnames(mergeData))
+mergeData
+################################################################################
+# 5:Creates a second, independent tidy data set with the average of each varia-#
+#   ble for each activity and each subject.                                    #
+################################################################################
 
-
-# 5.-Creates a second, independent tidy data set with the average of each variable 
-#    for each activity and each subject.
-
-
-## Read file subject train
-setwd("~/Desktop/UCI HAR Dataset/train")
-list.files()
-strain<-read.table("subject_train.txt")
-
-## Read file subject test
-setwd("~/Desktop/UCI HAR Dataset/test")
-list.files()
-stest<-read.table("subject_test.txt")
-
-## Merge data
-sub<-data.table(rbind(strain,stest))
-names(sub)<-"subject"
-data<-cbind(sub,datalabels)
-head(data,1)
-
-# The average of each variable for each activity and each subject. 
-library(reshape2)
-meandata<-dcast(data, subject~ variable, mean)
+# The average of each variable for each activity
+mergeData<-data.table(mergeData)
+tidy_data<-group_by(mergeData,activity,subject)
+tidyData<-summarise_each(tidy_data,funs(mean))
+write.table(tidyData,"tidyData.txt", row.names = FALSE)
 
